@@ -13,6 +13,7 @@ create table if not exists public.products (
   created_at timestamptz not null default now()
 );
 
+create unique index if not exists products_shopee_url_key on public.products (shopee_url);
 create index if not exists products_is_active_idx on public.products (is_active);
 create index if not exists products_category_idx on public.products (category);
 create index if not exists products_created_at_idx on public.products (created_at);

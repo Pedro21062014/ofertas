@@ -21,3 +21,7 @@ pnpm-debug.log*
 
 # TypeScript
 tsconfig.tsbuildinfo
+.open-next
+.wrangler
+.dev.vars
+cloudflare-env.d.ts
