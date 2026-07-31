@@ -1,6 +1,5 @@
 import "dotenv/config";
 import { existsSync, readFileSync } from "node:fs";
-import { createClient } from "@supabase/supabase-js";
 
 const defaultInputPath = existsSync("data/produtos_TODOS.json")
   ? "data/produtos_TODOS.json"
@@ -14,10 +13,33 @@ const importMode = (process.env.IMPORT_MODE || "upsert").toLowerCase();
 
 if (!supabaseUrl) throw new Error("SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL is required");
 if (!supabaseKey) throw new Error("SUPABASE_SERVICE_ROLE_KEY is required to import products");
+if (!["upsert", "replace", "insert"].includes(importMode)) {
+  throw new Error('IMPORT_MODE must be "upsert", "replace" or "insert"');
+}
 
-const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: { autoRefreshToken: false, persistSession: false },
-});
+const restUrl = `${supabaseUrl.replace(/\/$/, "")}/rest/v1/products`;
+const baseHeaders = {
+  apikey: supabaseKey,
+  authorization: `Bearer ${supabaseKey}`,
+  "content-type": "application/json",
+};
+
+async function request(url, options = {}) {
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      ...baseHeaders,
+      ...options.headers,
+    },
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Supabase request failed (${res.status}): ${text}`);
+  }
+
+  return res;
+}
 
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -49,20 +71,21 @@ for (const [cat, items] of Object.entries(data)) {
 const rows = Array.from(byUrl.values());
 
 if (importMode === "replace") {
-  const { error: deleteError } = await supabase.from("products").delete().neq("id", -1);
-  if (deleteError) throw deleteError;
+  await request(`${restUrl}?id=neq.-1`, { method: "DELETE" });
 }
 
 let imported = 0;
 const chunkSize = 500;
 for (let i = 0; i < rows.length; i += chunkSize) {
   const chunk = rows.slice(i, i + chunkSize);
-  const query = supabase.from("products");
-  const { error } = importMode === "insert"
-    ? await query.insert(chunk)
-    : await query.upsert(chunk, { onConflict: "shopee_url" });
-
-  if (error) throw error;
+  const url = importMode === "insert" ? restUrl : `${restUrl}?on_conflict=shopee_url`;
+  await request(url, {
+    method: "POST",
+    headers: {
+      Prefer: importMode === "insert" ? "return=minimal" : "resolution=merge-duplicates,return=minimal",
+    },
+    body: JSON.stringify(chunk),
+  });
   imported += chunk.length;
 }
 
