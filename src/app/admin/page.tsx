@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowUpRight, Trash2, Pencil, Save, X, Sparkles, CheckCircle2, ImageIcon, RefreshCcw } from "lucide-react";
 import { Logo, LogoMark } from "@/components/Logo";
@@ -186,11 +187,11 @@ export default function AdminPage() {
     <main className="min-h-screen bg-stone-50 text-stone-950 selection:bg-brand-100">
       <nav className="sticky top-0 z-50 w-full bg-stone-50/80 backdrop-blur-xl border-b border-stone-200/60">
         <div className="mx-auto max-w-6xl px-6 md:px-10 h-16 md:h-20 flex items-center justify-between">
-          <a href="/" className="group">
+          <Link href="/" className="group">
             <Logo size={38} className="transition-transform group-hover:scale-[1.02]" />
-          </a>
+          </Link>
           <div className="flex items-center gap-4">
-            <a href="/" className="text-[13px] font-medium text-stone-600 hover:text-brand-600 transition-colors">Voltar ao site</a>
+            <Link href="/" className="text-[13px] font-medium text-stone-600 hover:text-brand-600 transition-colors">Voltar ao site</Link>
             <button
               onClick={() => {
                 if (typeof window !== "undefined") localStorage.removeItem("achados_da_shopee_admin");

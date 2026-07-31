@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowUpRight, Sparkles, Menu, X, ShoppingBag, Check, Star, Flame } from "lucide-react";
 import { Logo, LogoMark } from "@/components/Logo";
@@ -83,9 +84,9 @@ export default function HomePage() {
       {/* Nav */}
       <nav className="sticky top-0 z-50 w-full bg-stone-50/80 backdrop-blur-xl border-b border-stone-200/60">
         <div className="mx-auto max-w-6xl px-6 md:px-10 h-16 md:h-20 flex items-center justify-between">
-          <a href="/" className="group">
+          <Link href="/" className="group">
             <Logo size={38} className="transition-transform group-hover:scale-[1.02]" />
-          </a>
+          </Link>
           <div className="hidden md:flex items-center gap-8 text-[13px] font-medium text-stone-600">
             <a href="#produtos" className="hover:text-stone-950 transition-colors">
               Achados
@@ -200,12 +201,12 @@ export default function HomePage() {
                Uma seleção dos achados mais populares e bem avaliados.
              </p>
             </div>
-            <a
+            <Link
               href="/produtos"
               className="inline-flex items-center gap-2 rounded-full bg-brand-500 text-white px-5 py-2.5 text-sm font-medium hover:bg-brand-600 transition-colors shadow-lg shadow-brand-500/25"
             >
               Ver todos os achados <ArrowUpRight size={16} />
-            </a>
+            </Link>
       </div>
 
       {loading ? (

@@ -1,24 +1,74 @@
-import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
+import { createClient } from "@supabase/supabase-js";
 
-const databaseUrl = process.env.DATABASE_URL;
+const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ??
+  process.env.SUPABASE_SERVICE_ROLE ??
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+  process.env.SUPABASE_ANON_KEY;
 
-if (!databaseUrl) {
-  throw new Error("DATABASE_URL is required");
+if (!supabaseUrl) {
+  throw new Error("SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL is required");
 }
 
-const globalForDb = globalThis as typeof globalThis & {
-  __arenaNextJsPostgresqlPool?: Pool;
+if (!supabaseKey) {
+  throw new Error("SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY is required");
+}
+
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false,
+  },
+});
+
+export type DbProduct = {
+  id: number;
+  title: string;
+  image_url: string;
+  shopee_url: string;
+  price: number;
+  category: string;
+  is_active: boolean;
+  shop_name: string | null;
+  rating: string | number | null;
+  sales: number;
+  discount: number;
+  created_at: string;
 };
 
-export const pool =
-  globalForDb.__arenaNextJsPostgresqlPool ??
-  new Pool({
-    connectionString: databaseUrl,
-  });
+export type Product = {
+  id: number;
+  title: string;
+  imageUrl: string;
+  shopeeUrl: string;
+  price: number;
+  category: string;
+  isActive: boolean;
+  shopName: string | null;
+  rating: string | null;
+  sales: number;
+  discount: number;
+  createdAt: string;
+};
 
-if (process.env.NODE_ENV !== "production") {
-  globalForDb.__arenaNextJsPostgresqlPool = pool;
+export function toProduct(row: DbProduct): Product {
+  return {
+    id: row.id,
+    title: row.title,
+    imageUrl: row.image_url,
+    shopeeUrl: row.shopee_url,
+    price: row.price,
+    category: row.category,
+    isActive: row.is_active,
+    shopName: row.shop_name,
+    rating: row.rating === null ? null : String(row.rating),
+    sales: row.sales,
+    discount: row.discount,
+    createdAt: row.created_at,
+  };
 }
 
-export const db = drizzle(pool);
+export function toProducts(rows: DbProduct[] | null | undefined): Product[] {
+  return (rows ?? []).map(toProduct);
+}

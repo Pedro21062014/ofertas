@@ -1,19 +1,24 @@
-import { db } from "@/db";
-import { products } from "@/db/schema";
+import { supabase } from "@/db";
 import { NextResponse } from "next/server";
-import { eq, sql } from "drizzle-orm";
 
 export async function GET() {
   try {
-    const rows = await db
-      .select({ category: products.category, count: sql<number>`count(*)::int` })
-      .from(products)
-      .where(eq(products.isActive, true))
-      .groupBy(products.category)
-      .orderBy(products.category);
+    const { data, error } = await supabase
+      .from("products")
+      .select("category")
+      .eq("is_active", true)
+      .order("category", { ascending: true });
+
+    if (error) throw error;
+
+    const counts = new Map<string, number>();
+    for (const row of data ?? []) {
+      const category = row.category || "Geral";
+      counts.set(category, (counts.get(category) ?? 0) + 1);
+    }
 
     return NextResponse.json({
-      categories: rows.map((r) => ({ name: r.category, count: Number(r.count) })),
+      categories: Array.from(counts.entries()).map(([name, count]) => ({ name, count })),
     });
   } catch (e) {
     return NextResponse.json({ categories: [] }, { status: 500 });

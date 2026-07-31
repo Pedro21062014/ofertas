@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState, Suspense, useCallback } from "react";
 import { ArrowUpRight, Search, Star, Flame, ShoppingBag, X, Filter, ChevronLeft, ChevronRight } from "lucide-react";
 import { Logo, LogoMark } from "@/components/Logo";
@@ -175,9 +176,9 @@ function ProdutosContent() {
       {/* Nav */}
       <nav className="sticky top-0 z-50 w-full bg-stone-50/80 backdrop-blur-xl border-b border-stone-200/60">
         <div className="mx-auto max-w-6xl px-6 md:px-10 h-16 md:h-20 flex items-center justify-between">
-          <a href="/" className="group">
+          <Link href="/" className="group">
             <Logo size={38} className="transition-transform group-hover:scale-[1.02]" />
-          </a>
+          </Link>
 
           <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-8">
             <div className="relative w-full">
@@ -195,12 +196,12 @@ function ProdutosContent() {
           </form>
 
           <div className="hidden md:flex items-center gap-8 text-[13px] font-medium text-stone-600">
-            <a href="/" className="hover:text-stone-950 transition-colors">
+            <Link href="/" className="hover:text-stone-950 transition-colors">
               Início
-            </a>
-            <a href="/produtos" className="text-stone-950 hover:text-brand-600 transition-colors">
+            </Link>
+            <Link href="/produtos" className="text-stone-950 hover:text-brand-600 transition-colors">
               Achados
-            </a>
+            </Link>
           </div>
 
           <button onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)} className="md:hidden p-2 -mr-2" aria-label="Filtros">
