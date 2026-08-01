@@ -4,8 +4,10 @@ compatibility_date = "2026-07-31"
 compatibility_flags = ["nodejs_compat"]
 
 [vars]
+SHOPEE_AFFILIATE_APP_ID = "18333870469"
 NEXT_PUBLIC_SUPABASE_URL = "https://aklkhuxjixoorwcxytei.supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFrbGtodXhqaXhvb3J3Y3h5dGVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1MTA3NjcsImV4cCI6MjEwMTA4Njc2N30.2cyb4hT0DfwCGIculkmvNZQ8Rf1FOTf1CDN6k5EDm6E"
 # Configure no painel do Cloudflare como Secrets:
 # SUPABASE_SERVICE_ROLE_KEY = service role key do Supabase
 # ADMIN_PASS = senha do painel admin
+# SHOPEE_AFFILIATE_SECRET = senha/secret da API de afiliados da Shopee

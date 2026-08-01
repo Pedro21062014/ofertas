@@ -202,6 +202,9 @@ function ProdutosContent() {
             <Link href="/produtos" className="text-stone-950 hover:text-brand-600 transition-colors">
               Achados
             </Link>
+            <Link href="/conversor" className="hover:text-brand-600 transition-colors">
+              Conversor
+            </Link>
           </div>
 
           <button onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)} className="md:hidden p-2 -mr-2" aria-label="Filtros">

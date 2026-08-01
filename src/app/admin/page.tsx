@@ -191,6 +191,7 @@ export default function AdminPage() {
             <Logo size={38} className="transition-transform group-hover:scale-[1.02]" />
           </Link>
           <div className="flex items-center gap-4">
+            <Link href="/conversor" className="text-[13px] font-medium text-stone-600 hover:text-brand-600 transition-colors">Conversor</Link>
             <Link href="/" className="text-[13px] font-medium text-stone-600 hover:text-brand-600 transition-colors">Voltar ao site</Link>
             <button
               onClick={() => {

@@ -190,6 +190,92 @@ async function handleScrape(context: any) {
   return json({ title, imageUrl, description, url });
 }
 
+
+async function sha256Hex(input: string) {
+  const data = new TextEncoder().encode(input);
+  const hash = await crypto.subtle.digest("SHA-256", data);
+  return [...new Uint8Array(hash)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function normalizeSubIds(raw: unknown) {
+  if (Array.isArray(raw)) {
+    return raw.map((item) => String(item).trim()).filter(Boolean).slice(0, 5);
+  }
+
+  if (typeof raw === "string") {
+    return raw
+      .split(/[,;\n\r]+/)
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .slice(0, 5);
+  }
+
+  return [];
+}
+
+async function handleAffiliateConvert(context: any) {
+  const body = await context.request.json();
+  const originUrl = String(body?.url || body?.originUrl || "").trim();
+  const subIds = normalizeSubIds(body?.subIds || body?.subId);
+
+  if (!originUrl) {
+    return json({ error: "Informe o link do produto." }, { status: 400 });
+  }
+
+  if (!/^https?:\/\//i.test(originUrl) || !originUrl.includes("shopee")) {
+    return json({ error: "Informe um link válido da Shopee." }, { status: 400 });
+  }
+
+  const appId = String(context.env.SHOPEE_AFFILIATE_APP_ID || "18333870469").trim();
+  const secret = String(context.env.SHOPEE_AFFILIATE_SECRET || context.env.SHOPEE_AFFILIATE_PASSWORD || "").trim();
+  const endpoint = String(context.env.SHOPEE_AFFILIATE_ENDPOINT || "https://open-api.affiliate.shopee.com.br/graphql").trim();
+
+  if (!secret) {
+    return json(
+      { error: "SHOPEE_AFFILIATE_SECRET não foi configurada no Cloudflare." },
+      { status: 500 },
+    );
+  }
+
+  const inputFields = [`originUrl:${JSON.stringify(originUrl)}`];
+  if (subIds.length > 0) inputFields.push(`subIds:${JSON.stringify(subIds)}`);
+
+  const payload = JSON.stringify({
+    query: `mutation { generateShortLink(input:{${inputFields.join(",")}}) { shortLink } }`,
+  });
+
+  const timestamp = Math.floor(Date.now() / 1000).toString();
+  const signature = await sha256Hex(`${appId}${timestamp}${payload}${secret}`);
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `SHA256 Credential=${appId}, Timestamp=${timestamp}, Signature=${signature}`,
+    },
+    body: payload,
+  });
+
+  const result: any = await response.json().catch(() => null);
+
+  if (!response.ok || result?.errors?.length) {
+    return json(
+      {
+        error: "Não foi possível converter o link na API da Shopee.",
+        details: result?.errors || result || null,
+      },
+      { status: 502 },
+    );
+  }
+
+  const affiliateLink = result?.data?.generateShortLink?.shortLink;
+  if (!affiliateLink) {
+    return json({ error: "A Shopee não retornou o link convertido.", details: result }, { status: 502 });
+  }
+
+  return json({ affiliateLink, originalUrl: originUrl, subIds });
+}
+
 export async function onRequest(context: any) {
   try {
     const url = new URL(context.request.url);
@@ -221,6 +307,10 @@ export async function onRequest(context: any) {
 
     if (method === "GET" && pathParts.join("/") === "admin/products") {
       return await handleAdminProducts(context);
+    }
+
+    if (method === "POST" && pathParts.join("/") === "affiliate/convert") {
+      return await handleAffiliateConvert(context);
     }
 
     if (method === "POST" && pathParts.length === 1 && pathParts[0] === "scrape") {

@@ -91,6 +91,9 @@ export default function HomePage() {
             <a href="#produtos" className="hover:text-stone-950 transition-colors">
               Achados
             </a>
+            <Link href="/conversor" className="hover:text-stone-950 transition-colors">
+              Conversor
+            </Link>
             <a href="#sobre" className="hover:text-stone-950 transition-colors">
               Sobre
             </a>
@@ -107,6 +110,9 @@ export default function HomePage() {
             <a href="#produtos" onClick={() => setMobileOpen(false)}>
               Achados
             </a>
+            <Link href="/conversor" onClick={() => setMobileOpen(false)}>
+              Conversor
+            </Link>
             <a href="#sobre" onClick={() => setMobileOpen(false)}>
               Sobre
             </a>

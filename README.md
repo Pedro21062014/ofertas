@@ -56,6 +56,8 @@ Configure em **Workers & Pages > seu projeto > Settings > Variables and Secrets*
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = anon public key do Supabase
 - `SUPABASE_SERVICE_ROLE_KEY` = service role key do Supabase, como Secret
 - `ADMIN_PASS` = senha do painel admin, como Secret
+- `SHOPEE_AFFILIATE_APP_ID` = `18333870469`
+- `SHOPEE_AFFILIATE_SECRET` = senha/secret da API de afiliados da Shopee, como Secret
 
 ### APIs via Functions
 
@@ -68,3 +70,9 @@ As rotas abaixo são Cloudflare Pages Functions:
 - `/api/scrape`
 - `/api/admin/auth`
 - `/api/admin/products`
+
+## Conversor de links afiliados
+
+A página `/conversor` permite colar um link de produto da Shopee e gerar um link afiliado usando a Shopee Affiliate Open API. A rota usada é `/api/affiliate/convert` em Cloudflare Pages Functions.
+
+A senha da API da Shopee **não deve ir para o frontend nem para o GitHub**. Configure `SHOPEE_AFFILIATE_SECRET` como Secret no Cloudflare.
