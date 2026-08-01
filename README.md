@@ -31,29 +31,32 @@ Por padrão, o script faz upsert por `shopee_url`, evitando duplicados. Para lim
 IMPORT_MODE=replace npm run import:products
 ```
 
-
 ## Deploy no Cloudflare
 
-Este projeto usa `@opennextjs/cloudflare`, o adaptador recomendado para rodar Next.js full-stack no runtime da Cloudflare.
+Este app é Next.js full-stack, com rotas `/api`. Por isso, o deploy correto na Cloudflare é via **Workers Builds/OpenNext** dentro de **Workers & Pages**. Não use o fluxo de Pages estático puro.
 
-### Variáveis de ambiente no Cloudflare
+O projeto já tem `wrangler.toml`, `open-next.config.ts` e scripts de build/deploy.
+
+### Variáveis no Cloudflare
 
 Configure em **Workers & Pages > seu projeto > Settings > Variables and Secrets**:
 
 - `NODE_VERSION` = `22`
-- `NEXT_PUBLIC_SUPABASE_URL` = URL do seu projeto Supabase
+- `NEXT_PUBLIC_SUPABASE_URL` = `https://aklkhuxjixoorwcxytei.supabase.co`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = anon public key do Supabase
 - `SUPABASE_SERVICE_ROLE_KEY` = service role key do Supabase, como secret
 - `ADMIN_PASS` = senha do painel admin, como secret
 
-### Build/deploy
+### Build/deploy pelo Git
 
-Para deploy via Git/Workers Builds, use:
+Use:
 
 - Build command: `npm run cf:build`
 - Deploy command: `npm run cf:deploy`
 
-Para testar localmente no runtime da Cloudflare:
+Importante: não use o formulário antigo de **Cloudflare Pages** que só pede `Build output directory`, porque ele é para site estático/Pages. Este projeto precisa do Worker gerado pelo OpenNext para as rotas `/api`.
+
+### Testar localmente no runtime da Cloudflare
 
 ```bash
 cp .dev.vars.example .dev.vars

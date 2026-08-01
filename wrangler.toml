@@ -1,0 +1,23 @@
+name = "ofertas"
+main = ".open-next/worker.js"
+compatibility_date = "2026-07-31"
+compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
+
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
+
+[[services]]
+binding = "WORKER_SELF_REFERENCE"
+service = "ofertas"
+
+[observability]
+enabled = true
+
+[vars]
+NEXTJS_ENV = "production"
+NEXT_PUBLIC_SUPABASE_URL = "https://aklkhuxjixoorwcxytei.supabase.co"
+# Configure estas duas como Secrets no Cloudflare, não aqui no arquivo:
+# NEXT_PUBLIC_SUPABASE_ANON_KEY
+# SUPABASE_SERVICE_ROLE_KEY
+# ADMIN_PASS

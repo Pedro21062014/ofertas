@@ -1,24 +1,40 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ??
-  process.env.SUPABASE_SERVICE_ROLE ??
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-  process.env.SUPABASE_ANON_KEY;
+let cachedSupabase: SupabaseClient | null = null;
 
-if (!supabaseUrl) {
-  throw new Error("SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL is required");
+function getSupabaseClient() {
+  if (cachedSupabase) return cachedSupabase;
+
+  const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ??
+    process.env.SUPABASE_SERVICE_ROLE ??
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+    process.env.SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl) {
+    throw new Error("SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL is required");
+  }
+
+  if (!supabaseKey) {
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY is required");
+  }
+
+  cachedSupabase = createClient(supabaseUrl, supabaseKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+
+  return cachedSupabase;
 }
 
-if (!supabaseKey) {
-  throw new Error("SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY is required");
-}
-
-export const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false,
+export const supabase = new Proxy({} as SupabaseClient, {
+  get(_target, prop, receiver) {
+    const client = getSupabaseClient();
+    const value = Reflect.get(client, prop, receiver);
+    return typeof value === "function" ? value.bind(client) : value;
   },
 });
 
