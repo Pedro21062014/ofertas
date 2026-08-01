@@ -1,0 +1,34 @@
+name: Verificar produtos Shopee
+
+on:
+  schedule:
+    # Toda segunda-feira às 06:00 UTC.
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  check-products:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://aklkhuxjixoorwcxytei.supabase.co
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      CHECK_CONCURRENCY: 8
+      CHECK_TIMEOUT_MS: 12000
+      # 0 = verifica todos os produtos ativos. Se ficar pesado, troque para 5000.
+      CHECK_MAX_PRODUCTS: 0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check products stock
+        run: npm run check:products

@@ -8,7 +8,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "pages:build": "next build",
-    "import:products": "node scripts/import-products.mjs"
+    "import:products": "node scripts/import-products.mjs",
+    "check:products": "node scripts/check-products-stock.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.53.0",

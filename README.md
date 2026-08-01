@@ -76,3 +76,13 @@ As rotas abaixo são Cloudflare Pages Functions:
 A página `/conversor` permite colar um link de produto da Shopee e gerar um link afiliado usando a Shopee Affiliate Open API. A rota usada é `/api/affiliate/convert` em Cloudflare Pages Functions.
 
 A senha da API da Shopee **não deve ir para o frontend nem para o GitHub**. Configure `SHOPEE_AFFILIATE_SECRET` como Secret no Cloudflare.
+
+## Salvamento automático e verificação semanal
+
+Quando alguém usa `/conversor` com um link de produto que ainda não está cadastrado, a Function `/api/affiliate/convert` tenta salvar o produto automaticamente na tabela `products` com categoria `Convertidos`.
+
+A verificação semanal de produtos fica em `.github/workflows/check-products-stock.yml` e roda toda segunda-feira. Ela chama `npm run check:products`, verifica links ativos da Shopee e marca `is_active = false` para produtos removidos/fora de estoque quando detectar 404/410 ou textos de indisponibilidade.
+
+Para a verificação semanal funcionar no GitHub Actions, configure no repositório o Secret:
+
+- `SUPABASE_SERVICE_ROLE_KEY`

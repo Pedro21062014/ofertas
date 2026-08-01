@@ -191,6 +191,86 @@ async function handleScrape(context: any) {
 }
 
 
+
+async function fetchProductMetadata(url: string) {
+  try {
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        Accept: "text/html",
+      },
+      redirect: "follow",
+      signal: AbortSignal.timeout(8000),
+    });
+
+    if (!response.ok) return null;
+
+    const finalUrl = response.url || url;
+    const html = await response.text();
+    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+    const ogTitle = html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']+)["']/i);
+    const ogImage = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i);
+
+    const rawTitle = (ogTitle ? ogTitle[1] : titleMatch ? titleMatch[1] : "").trim();
+    const title = rawTitle
+      .replace(/\s*\|\s*Shopee Brasil.*$/i, "")
+      .replace(/\s*-\s*Shopee.*$/i, "")
+      .trim();
+
+    return {
+      finalUrl,
+      title: title || "Produto da Shopee",
+      imageUrl: ogImage ? ogImage[1].trim() : "",
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function findProductByUrl(supabase: any, url: string) {
+  const { data, error } = await supabase
+    .from("products")
+    .select("id")
+    .eq("shopee_url", url)
+    .limit(1);
+
+  if (error) throw error;
+  return data?.[0] ?? null;
+}
+
+async function saveConvertedProductIfMissing(context: any, originalUrl: string, affiliateLink: string) {
+  const supabase = getSupabase(context.env);
+  const existingOriginal = await findProductByUrl(supabase, originalUrl);
+  if (existingOriginal) return { saved: false, reason: "already_exists", productId: existingOriginal.id };
+
+  const existingAffiliate = await findProductByUrl(supabase, affiliateLink);
+  if (existingAffiliate) return { saved: false, reason: "already_exists", productId: existingAffiliate.id };
+
+  const metadata = await fetchProductMetadata(originalUrl);
+  const requestUrl = new URL(context.request.url);
+  const fallbackImage = `${requestUrl.origin}/logo.svg`;
+
+  const { data, error } = await supabase
+    .from("products")
+    .insert({
+      title: metadata?.title || "Produto da Shopee",
+      image_url: metadata?.imageUrl || fallbackImage,
+      shopee_url: affiliateLink,
+      price: 0,
+      category: "Convertidos",
+      is_active: true,
+      shop_name: "Shopee",
+      rating: null,
+      sales: 0,
+      discount: 0,
+    })
+    .select("id")
+    .single();
+
+  if (error) throw error;
+  return { saved: true, productId: data?.id ?? null };
+}
+
 async function sha256Hex(input: string) {
   const data = new TextEncoder().encode(input);
   const hash = await crypto.subtle.digest("SHA-256", data);
@@ -273,7 +353,14 @@ async function handleAffiliateConvert(context: any) {
     return json({ error: "A Shopee não retornou o link convertido.", details: result }, { status: 502 });
   }
 
-  return json({ affiliateLink, originalUrl: originUrl, subIds });
+  let catalogSave = { saved: false, reason: "not_attempted" } as any;
+  try {
+    catalogSave = await saveConvertedProductIfMissing(context, originUrl, affiliateLink);
+  } catch (error: any) {
+    catalogSave = { saved: false, reason: "save_failed", error: error?.message || "Erro ao salvar no catálogo" };
+  }
+
+  return json({ affiliateLink, originalUrl: originUrl, subIds, catalogSave });
 }
 
 export async function onRequest(context: any) {
