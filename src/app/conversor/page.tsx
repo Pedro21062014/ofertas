@@ -151,11 +151,23 @@ export default function ConversorPage() {
                 <Check size={17} /> Link afiliado gerado
               </div>
               <div className="flex flex-col md:flex-row gap-3">
-                <input
-                  readOnly
-                  value={affiliateLink}
-                  className="flex-1 rounded-xl bg-white border border-emerald-200 px-3.5 py-3 text-sm text-stone-700"
-                />
+                <a
+                  href={affiliateLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 rounded-xl bg-white border border-emerald-200 px-3.5 py-3 text-sm text-brand-700 hover:text-brand-800 hover:border-brand-300 transition-colors break-all underline underline-offset-4"
+                  title="Abrir produto com link afiliado"
+                >
+                  {affiliateLink}
+                </a>
+                <a
+                  href={affiliateLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-500 text-white px-5 py-3 text-sm font-medium hover:bg-brand-600 transition-colors"
+                >
+                  Abrir produto
+                </a>
                 <button
                   onClick={copyLink}
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-stone-950 text-stone-50 px-5 py-3 text-sm font-medium hover:bg-stone-800 transition-colors"
@@ -164,6 +176,9 @@ export default function ConversorPage() {
                   {copied ? "Copiado" : "Copiar"}
                 </button>
               </div>
+              <p className="text-xs text-emerald-700/80 mt-3">
+                Clique no link ou em “Abrir produto” para abrir a página da Shopee já com seu link afiliado.
+              </p>
             </div>
           )}
         </div>
