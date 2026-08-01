@@ -7,15 +7,10 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "import:products": "node scripts/import-products.mjs",
-    "cf:build": "opennextjs-cloudflare build",
-    "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "cf:deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "cf:upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
-    "cf:typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+    "pages:build": "next build",
+    "import:products": "node scripts/import-products.mjs"
   },
   "dependencies": {
-    "@opennextjs/cloudflare": "^1.20.2",
     "@supabase/supabase-js": "^2.53.0",
     "dotenv": "17.3.1",
     "lucide-react": "^1.28.0",
@@ -32,8 +27,7 @@
     "eslint-config-next": "16.2.6",
     "postcss": "8.5.8",
     "tailwindcss": "4.1.17",
-    "typescript": "5.9.3",
-    "wrangler": "^4.118.0"
+    "typescript": "5.9.3"
   },
   "engines": {
     "node": ">=22.0.0"

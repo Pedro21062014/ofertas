@@ -1,11 +1,11 @@
-import { supabase, toProduct } from "@/db";
-import { NextResponse } from "next/server";
+import { getIdParam, getSupabase, json, toProduct } from "../../_lib/api";
 
-export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function onRequestPut(context: any) {
   try {
-    const { id } = await params;
+    const supabase = getSupabase(context.env);
+    const id = getIdParam(context.params);
     const numId = parseInt(id, 10);
-    const body = await req.json();
+    const body = await context.request.json();
 
     const { data: existing, error: findError } = await supabase
       .from("products")
@@ -13,7 +13,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       .eq("id", numId)
       .single();
 
-    if (findError || !existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (findError || !existing) return json({ error: "Not found" }, { status: 404 });
 
     const { data: updated, error } = await supabase
       .from("products")
@@ -35,19 +35,22 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
     if (error) throw error;
 
-    return NextResponse.json({ product: toProduct(updated) });
-  } catch (e) {
-    return NextResponse.json({ error: "Failed to update" }, { status: 500 });
+    return json({ product: toProduct(updated) });
+  } catch {
+    return json({ error: "Failed to update" }, { status: 500 });
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function onRequestDelete(context: any) {
   try {
-    const { id } = await params;
+    const supabase = getSupabase(context.env);
+    const id = getIdParam(context.params);
     const { error } = await supabase.from("products").delete().eq("id", parseInt(id, 10));
+
     if (error) throw error;
-    return NextResponse.json({ success: true });
-  } catch (e) {
-    return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
+
+    return json({ success: true });
+  } catch {
+    return json({ error: "Failed to delete" }, { status: 500 });
   }
 }

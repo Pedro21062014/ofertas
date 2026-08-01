@@ -1,15 +1,15 @@
-import { supabase, toProduct, toProducts } from "@/db";
-import { NextResponse } from "next/server";
+import { getSupabase, json, toProduct, toProducts } from "../../_lib/api";
 
-export async function GET(req: Request) {
+export async function onRequestGet(context: any) {
   try {
-    const { searchParams } = new URL(req.url);
+    const supabase = getSupabase(context.env);
+    const { searchParams } = new URL(context.request.url);
     const q = searchParams.get("q") || "";
     const categoria = searchParams.get("categoria") || "";
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
     const perPageRaw = parseInt(searchParams.get("perPage") || "0", 10) || 0;
     const paginate = perPageRaw > 0;
-    const perPage = paginate ? Math.min(200, Math.max(1, perPageRaw)) : 0;
+    const perPage = paginate ? Math.min(200, Math.max(1, perPageRaw)) : 48;
 
     let query = supabase
       .from("products")
@@ -20,35 +20,34 @@ export async function GET(req: Request) {
     if (q) query = query.ilike("title", `%${q}%`);
     if (categoria && categoria !== "Todos") query = query.eq("category", categoria);
 
-    if (paginate) {
-      const from = (page - 1) * perPage;
-      query = query.range(from, from + perPage - 1);
-    }
+    const from = paginate ? (page - 1) * perPage : 0;
+    query = query.range(from, from + perPage - 1);
 
     const { data, count, error } = await query;
-
     if (error) throw error;
 
     const total = count ?? data?.length ?? 0;
 
-    return NextResponse.json({
+    return json({
       products: toProducts(data),
       total,
       page: paginate ? page : 1,
       perPage: paginate ? perPage : total,
       totalPages: paginate ? Math.max(1, Math.ceil(total / perPage)) : 1,
     });
-  } catch (e) {
-    return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });
+  } catch {
+    return json({ error: "Failed to fetch" }, { status: 500 });
   }
 }
 
-export async function POST(req: Request) {
+export async function onRequestPost(context: any) {
   try {
-    const body = await req.json();
+    const supabase = getSupabase(context.env);
+    const body = await context.request.json();
     const { title, imageUrl, shopeeUrl, price, category } = body;
+
     if (!title || !imageUrl || !shopeeUrl) {
-      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+      return json({ error: "Missing fields" }, { status: 400 });
     }
 
     const { data, error } = await supabase
@@ -66,8 +65,8 @@ export async function POST(req: Request) {
 
     if (error) throw error;
 
-    return NextResponse.json({ product: toProduct(data) }, { status: 201 });
-  } catch (e) {
-    return NextResponse.json({ error: "Failed to create" }, { status: 500 });
+    return json({ product: toProduct(data) }, { status: 201 });
+  } catch {
+    return json({ error: "Failed to create" }, { status: 500 });
   }
 }

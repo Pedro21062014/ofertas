@@ -1,23 +1,11 @@
 name = "ofertas"
-main = ".open-next/worker.js"
+pages_build_output_dir = "out"
 compatibility_date = "2026-07-31"
-compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
-
-[assets]
-directory = ".open-next/assets"
-binding = "ASSETS"
-
-[[services]]
-binding = "WORKER_SELF_REFERENCE"
-service = "ofertas"
-
-[observability]
-enabled = true
+compatibility_flags = ["nodejs_compat"]
 
 [vars]
-NEXTJS_ENV = "production"
 NEXT_PUBLIC_SUPABASE_URL = "https://aklkhuxjixoorwcxytei.supabase.co"
-# Configure estas duas como Secrets no Cloudflare, não aqui no arquivo:
-# NEXT_PUBLIC_SUPABASE_ANON_KEY
-# SUPABASE_SERVICE_ROLE_KEY
-# ADMIN_PASS
+# Configure no painel do Cloudflare como Secrets/Variables:
+# NEXT_PUBLIC_SUPABASE_ANON_KEY = anon public key do Supabase
+# SUPABASE_SERVICE_ROLE_KEY = service role key do Supabase, como Secret
+# ADMIN_PASS = senha do painel admin, como Secret

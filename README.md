@@ -31,11 +31,21 @@ Por padrão, o script faz upsert por `shopee_url`, evitando duplicados. Para lim
 IMPORT_MODE=replace npm run import:products
 ```
 
-## Deploy no Cloudflare
+## Deploy no Cloudflare Pages estático + Functions
 
-Este app é Next.js full-stack, com rotas `/api`. Por isso, o deploy correto na Cloudflare é via **Workers Builds/OpenNext** dentro de **Workers & Pages**. Não use o fluxo de Pages estático puro.
+Este projeto é gerado como site estático em `out/` e as APIs ficam em `functions/` usando Cloudflare Pages Functions.
 
-O projeto já tem `wrangler.toml`, `open-next.config.ts` e scripts de build/deploy.
+### Configuração no Cloudflare Pages
+
+Use:
+
+- Framework preset: `None`
+- Build command: `npm run pages:build`
+- Build output directory: `out`
+- Root directory: `/`
+- Node version: `22`
+
+O arquivo `wrangler.toml` também já define `pages_build_output_dir = "out"` e `nodejs_compat`.
 
 ### Variáveis no Cloudflare
 
@@ -44,22 +54,17 @@ Configure em **Workers & Pages > seu projeto > Settings > Variables and Secrets*
 - `NODE_VERSION` = `22`
 - `NEXT_PUBLIC_SUPABASE_URL` = `https://aklkhuxjixoorwcxytei.supabase.co`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = anon public key do Supabase
-- `SUPABASE_SERVICE_ROLE_KEY` = service role key do Supabase, como secret
-- `ADMIN_PASS` = senha do painel admin, como secret
+- `SUPABASE_SERVICE_ROLE_KEY` = service role key do Supabase, como Secret
+- `ADMIN_PASS` = senha do painel admin, como Secret
 
-### Build/deploy pelo Git
+### APIs via Functions
 
-Use:
+As rotas abaixo são Cloudflare Pages Functions:
 
-- Build command: `npm run cf:build`
-- Deploy command: `npm run cf:deploy`
-
-Importante: não use o formulário antigo de **Cloudflare Pages** que só pede `Build output directory`, porque ele é para site estático/Pages. Este projeto precisa do Worker gerado pelo OpenNext para as rotas `/api`.
-
-### Testar localmente no runtime da Cloudflare
-
-```bash
-cp .dev.vars.example .dev.vars
-# preencha as chaves reais em .dev.vars
-npm run cf:preview
-```
+- `/api/products`
+- `/api/products/:id`
+- `/api/categories`
+- `/api/health`
+- `/api/scrape`
+- `/api/admin/auth`
+- `/api/admin/products`
