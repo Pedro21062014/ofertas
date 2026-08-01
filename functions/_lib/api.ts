@@ -1,5 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 
+const DEFAULT_SUPABASE_URL = "https://aklkhuxjixoorwcxytei.supabase.co";
+const DEFAULT_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFrbGtodXhqaXhvb3J3Y3h5dGVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1MTA3NjcsImV4cCI6MjEwMTA4Njc2N30.2cyb4hT0DfwCGIculkmvNZQ8Rf1FOTf1CDN6k5EDm6E";
+
 type Env = {
   SUPABASE_URL?: string;
   NEXT_PUBLIC_SUPABASE_URL?: string;
@@ -30,21 +33,20 @@ export function json(data: unknown, init: ResponseInit = {}) {
     ...init,
     headers: {
       "content-type": "application/json; charset=utf-8",
+      "cache-control": "no-store",
       ...init.headers,
     },
   });
 }
 
 export function getSupabase(env: Env) {
-  const supabaseUrl = env.SUPABASE_URL ?? env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseUrl = env.SUPABASE_URL ?? env.NEXT_PUBLIC_SUPABASE_URL ?? DEFAULT_SUPABASE_URL;
   const supabaseKey =
     env.SUPABASE_SERVICE_ROLE_KEY ??
     env.SUPABASE_SERVICE_ROLE ??
     env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-    env.SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl) throw new Error("SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL is required");
-  if (!supabaseKey) throw new Error("SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY is required");
+    env.SUPABASE_ANON_KEY ??
+    DEFAULT_SUPABASE_ANON_KEY;
 
   return createClient(supabaseUrl, supabaseKey, {
     auth: {
@@ -93,11 +95,6 @@ export async function fetchAllProducts(env: Env) {
   }
 
   return all;
-}
-
-export function getIdParam(params: Record<string, string | string[]>) {
-  const raw = params.id;
-  return Array.isArray(raw) ? raw[0] : raw;
 }
 
 export type { Env };
