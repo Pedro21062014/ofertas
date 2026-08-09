@@ -95,7 +95,7 @@ export default function ConversorPage() {
             </div>
             <div>
               <h2 className="font-serif text-3xl text-stone-950 mb-1">Converter link</h2>
-              <p className="text-sm text-stone-500">Funciona com links de produto da Shopee Brasil.</p>
+              <p className="text-sm text-stone-500">Aceita links normais, links encurtados e links compartilhados da Shopee.</p>
             </div>
           </div>
 
@@ -109,7 +109,7 @@ export default function ConversorPage() {
                 type="url"
                 value={url}
                 onChange={(event) => setUrl(event.target.value)}
-                placeholder="https://shopee.com.br/..."
+                placeholder="https://shopee.com.br/..., https://s.shopee.com.br/... ou https://shope.ee/..."
                 className="w-full rounded-2xl bg-stone-50 border border-stone-200 px-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-300/60"
                 required
               />

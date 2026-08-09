@@ -3,11 +3,11 @@ interface LogoProps {
   className?: string;
 }
 
-const LOGO_URL = "https://cdn.fbsbx.com/v/t65.102178-21/763211331_1381154730622332_2962590640055488380_n.jpg/logo-shopee.webp?_nc_ht=cdn.fbsbx.com&_nc_ohc=AT-z-SbCEnsQ7kNvwHcP2WE&sdl=0&ccb=14-4&oh=00_AQFgVShx89vEFSw5jNoY4AG-U7DALrWeWelEzAbm2rDAXg&oe=6A6EBD9B&_nc_sid=4ee932";
+const LOGO_URL = "/apple-touch-icon.png";
 
 /**
  * Achados da Shopee — logo image mark.
- * Uses the official Shopee logo image.
+ * Uses the same local icon configured for iPhone home-screen installs.
  */
 export function LogoMark({ size = 40, className = "" }: LogoProps) {
   return (

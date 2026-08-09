@@ -192,6 +192,55 @@ async function handleScrape(context: any) {
 
 
 
+
+function ensureUrlHasProtocol(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return trimmed;
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+}
+
+function isShopeeUrl(value: string) {
+  try {
+    const hostname = new URL(value).hostname.toLowerCase().replace(/^www\./, "");
+    return (
+      hostname === "shope.ee" ||
+      hostname === "shp.ee" ||
+      hostname.endsWith(".shope.ee") ||
+      hostname.endsWith(".shp.ee") ||
+      hostname === "shopee.com.br" ||
+      hostname.endsWith(".shopee.com.br") ||
+      hostname.includes("shopee.")
+    );
+  } catch {
+    return false;
+  }
+}
+
+async function resolveShopeeUrl(inputUrl: string) {
+  const originalUrl = ensureUrlHasProtocol(inputUrl);
+  if (!isShopeeUrl(originalUrl)) {
+    throw new Error("Informe um link válido da Shopee.");
+  }
+
+  try {
+    const response = await fetch(originalUrl, {
+      method: "GET",
+      redirect: "follow",
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      },
+      signal: AbortSignal.timeout(8000),
+    });
+
+    const resolvedUrl = response.url || originalUrl;
+    return isShopeeUrl(resolvedUrl) ? resolvedUrl : originalUrl;
+  } catch {
+    // Se a Shopee bloquear/limitar o fetch, ainda tentamos converter o link original.
+    return originalUrl;
+  }
+}
+
 async function fetchProductMetadata(url: string) {
   try {
     const response = await fetch(url, {
@@ -238,17 +287,18 @@ async function findProductByUrl(supabase: any, url: string) {
   return data?.[0] ?? null;
 }
 
-async function saveConvertedProductIfMissing(context: any, originalUrl: string, affiliateLink: string) {
+async function saveConvertedProductIfMissing(context: any, sourceUrls: string[], affiliateLink: string) {
   const supabase = getSupabase(context.env);
-  const existingOriginal = await findProductByUrl(supabase, originalUrl);
-  if (existingOriginal) return { saved: false, reason: "already_exists", productId: existingOriginal.id };
+  const uniqueUrls = Array.from(new Set([...sourceUrls, affiliateLink].filter(Boolean)));
 
-  const existingAffiliate = await findProductByUrl(supabase, affiliateLink);
-  if (existingAffiliate) return { saved: false, reason: "already_exists", productId: existingAffiliate.id };
+  for (const url of uniqueUrls) {
+    const existing = await findProductByUrl(supabase, url);
+    if (existing) return { saved: false, reason: "already_exists", productId: existing.id };
+  }
 
-  const metadata = await fetchProductMetadata(originalUrl);
+  const metadata = await fetchProductMetadata(sourceUrls[0] || affiliateLink);
   const requestUrl = new URL(context.request.url);
-  const fallbackImage = `${requestUrl.origin}/logo.svg`;
+  const fallbackImage = `${requestUrl.origin}/apple-touch-icon.png`;
 
   const { data, error } = await supabase
     .from("products")
@@ -295,16 +345,23 @@ function normalizeSubIds(raw: unknown) {
 
 async function handleAffiliateConvert(context: any) {
   const body = await context.request.json();
-  const originUrl = String(body?.url || body?.originUrl || "").trim();
+  const submittedUrl = String(body?.url || body?.originUrl || "").trim();
   const subIds = normalizeSubIds(body?.subIds || body?.subId);
 
-  if (!originUrl) {
+  if (!submittedUrl) {
     return json({ error: "Informe o link do produto." }, { status: 400 });
   }
 
-  if (!/^https?:\/\//i.test(originUrl) || !originUrl.includes("shopee")) {
+  let originUrl: string;
+  try {
+    originUrl = ensureUrlHasProtocol(submittedUrl);
+    if (!isShopeeUrl(originUrl)) throw new Error("invalid");
+  } catch {
     return json({ error: "Informe um link válido da Shopee." }, { status: 400 });
   }
+
+  const resolvedUrl = await resolveShopeeUrl(originUrl);
+  const urlForShopeeApi = resolvedUrl || originUrl;
 
   const appId = String(context.env.SHOPEE_AFFILIATE_APP_ID || "18333870469").trim();
   const secret = String(context.env.SHOPEE_AFFILIATE_SECRET || context.env.SHOPEE_AFFILIATE_PASSWORD || "").trim();
@@ -317,7 +374,7 @@ async function handleAffiliateConvert(context: any) {
     );
   }
 
-  const inputFields = [`originUrl:${JSON.stringify(originUrl)}`];
+  const inputFields = [`originUrl:${JSON.stringify(urlForShopeeApi)}`];
   if (subIds.length > 0) inputFields.push(`subIds:${JSON.stringify(subIds)}`);
 
   const payload = JSON.stringify({
@@ -355,12 +412,12 @@ async function handleAffiliateConvert(context: any) {
 
   let catalogSave = { saved: false, reason: "not_attempted" } as any;
   try {
-    catalogSave = await saveConvertedProductIfMissing(context, originUrl, affiliateLink);
+    catalogSave = await saveConvertedProductIfMissing(context, [urlForShopeeApi, originUrl], affiliateLink);
   } catch (error: any) {
     catalogSave = { saved: false, reason: "save_failed", error: error?.message || "Erro ao salvar no catálogo" };
   }
 
-  return json({ affiliateLink, originalUrl: originUrl, subIds, catalogSave });
+  return json({ affiliateLink, originalUrl: originUrl, resolvedUrl: urlForShopeeApi, subIds, catalogSave });
 }
 
 export async function onRequest(context: any) {
