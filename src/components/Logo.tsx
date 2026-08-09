@@ -3,11 +3,11 @@ interface LogoProps {
   className?: string;
 }
 
-const LOGO_URL = "/apple-touch-icon.png";
+const LOGO_URL = "/logo.png";
 
 /**
  * Achados da Shopee — logo image mark.
- * Uses the same local icon configured for iPhone home-screen installs.
+ * Uses the brand logo image provided for Achados da Shopee.
  */
 export function LogoMark({ size = 40, className = "" }: LogoProps) {
   return (
