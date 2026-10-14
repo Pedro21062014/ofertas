@@ -1,0 +1,5 @@
+[build.environment]
+  # These values are public by design (Supabase URL/anon key are shipped to the
+  # browser; the Shopee app ID is an identifier, not the API secret), so they
+  # must not fail the build. Real secrets stay out of this list.
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SHOPEE_AFFILIATE_APP_ID"
